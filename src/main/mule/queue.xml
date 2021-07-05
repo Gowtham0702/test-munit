@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+  xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+  <flow name="queue-flow" doc:id="453b5556-d586-447a-b57b-a91809530d20">
+    <vm:listener queueName="recursion-controller-queue" doc:name="Listener"
+      doc:id="38d68656-064c-4cad-907b-0f4d633162ff" config-ref="vm-config"/>
+    <logger level="INFO" doc:name="Start of queue" doc:id="83b30e43-1ff3-447d-b90a-6a4345a12f8c"
+      message="Start of queue: #[now()]"/>
+    <logger level="INFO" doc:name="Log recieved message" doc:id="5ecd97ae-3afc-499b-b96d-28f1113d0186"
+      message="Input message from queue: #[payload]"/>
+    <set-variable value='#[payload]' doc:name="recursiveFlowMetadata"
+      doc:id="df59e052-81ab-4748-8461-eaa62f1d5ad8" variableName="recursiveFlowMetadata"/>
+    <flow-ref doc:name="recursive-queue-caller" doc:id="b7701417-70f2-42ad-a5c3-bc5faf3adec6"
+      name="recursive-queue-caller"/>
+    <logger level="INFO" doc:name="End of queue" doc:id="a87b9230-f327-4e91-a269-a34f6936c809"
+      message="End of queue: #[now()]"/>
+  </flow>
+
+  <flow name="recursive-queue-caller" doc:id="2b34cd9c-7f4e-49d5-8206-f3b10fbb7540">
+    <logger level="INFO" doc:name="Log Recursive counter" doc:id="5922582d-48de-409e-860f-963a33dd6958"
+      message="Recursive counter: #[(vars.recursiveFlowMetadata.counter default 0) as Number] "/>
+    <ee:transform doc:name="Set payload for next iteration" doc:id="f38c09e9-96d7-4240-9b03-0fb00d6b7b48">
+      <ee:message>
+      </ee:message>
+      <ee:variables>
+        <ee:set-variable variableName="recursiveFlowMetadata"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	counter: ((vars.recursiveFlowMetadata.counter default 0) as Number) + 1,
+	inputPayload: vars.recursiveFlowMetadata.inputPayload
+}]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <flow-ref doc:name="common-database-flow" doc:id="923caa60-29d6-41ea-96f7-e1f719fdfd25" name="common-database-flow"/>
+    <choice doc:name="Make recursive call?" doc:id="dac717e6-7487-4ca8-b5de-83375fbbd36e">
+      <when expression="#[(vars.recursiveFlowMetadata.counter as Number) &lt; Mule::p('recursion.counter')]">
+        <vm:publish queueName="recursion-controller-queue" doc:name="Publish to VM Queue" doc:id="43dc310e-6c86-47a4-81f1-901345d577c3" config-ref="vm-config" sendCorrelationId="ALWAYS" correlationId="#[correlationId]">
+          <vm:content><![CDATA[#[vars.recursiveFlowMetadata]]]></vm:content>
+        </vm:publish>
+      </when>
+      <otherwise>
+        <logger level="INFO" doc:name="Completed overall iterations" doc:id="f5546f57-b154-48b1-ae39-cdb904bfc0d9" message="Completed overall iterations"/>
+      </otherwise>
+    </choice>
+  </flow>
+  
+</mule>

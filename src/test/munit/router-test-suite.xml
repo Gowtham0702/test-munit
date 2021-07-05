@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<munit:config name="router-test-suite.xml" />
+  <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="1e65a0df-90af-4698-8f73-a5f3ebb8d5bf" >
+    <http:request-connection host="localhost" port="9081" />
+  </http:request-config>
+  <munit:test name="router-test-suite-router-flowTest" doc:id="49cb5f06-194a-4f6a-9a83-f60016b06810" description="Test">
+    <munit:enable-flow-sources >
+      <munit:enable-flow-source value="router-flow" />
+      <munit:enable-flow-source value="recursive-caller" />
+    </munit:enable-flow-sources>
+    <munit:behavior>
+      <munit-tools:mock-when doc:name="Mock when" doc:id="e76b7e17-24b3-4f8e-a5b7-4ce5ea66f088" processor="flow-ref">
+        <munit-tools:with-attributes >
+          <munit-tools:with-attribute whereValue="common-databaseFlow" attributeName="doc:name" />
+        </munit-tools:with-attributes>
+      </munit-tools:mock-when>
+    </munit:behavior>
+    <munit:execution>
+      <http:request method="GET" doc:name="coverage-tester" doc:id="a1215ae1-53ff-40ed-b297-0f2ed77dad21" config-ref="HTTP_Request_configuration" path="/api/v1/recursionTest"/>
+    </munit:execution>
+    <munit:validation >
+      <munit-tools:verify-call doc:name="Verify call" doc:id="448a2165-5bf9-4438-9a47-7d8d1b3752f0" processor="logger">
+        <munit-tools:with-attributes >
+          <munit-tools:with-attribute whereValue="Log end time" attributeName="doc:name" />
+        </munit-tools:with-attributes>
+      </munit-tools:verify-call>
+    </munit:validation>
+  </munit:test>
+  <munit:test name="router-test-suiteTest" doc:id="b6da38f5-0485-433e-b2da-3862e0512a4e" >
+    <munit:enable-flow-sources >
+      <munit:enable-flow-source value="router-os-flow" />
+    </munit:enable-flow-sources>
+    <munit:behavior >
+      <munit-tools:mock-when doc:name="Mock when" doc:id="9e98c370-500e-4e39-b802-cae200d39b77" processor="vm:publish">
+        <munit-tools:with-attributes >
+          <munit-tools:with-attribute whereValue="Publish to recursive controller queue" attributeName="doc:name" />
+        </munit-tools:with-attributes>
+      </munit-tools:mock-when>
+    </munit:behavior>
+    <munit:execution >
+      <http:request method="GET" doc:name="queue-test" doc:id="78a231b1-3b3a-4ce0-b5b5-ea8adceecf70" path="/api/v1/recursive" config-ref="HTTP_Request_configuration"/>
+    </munit:execution>
+    <munit:validation >
+      <munit-tools:verify-call doc:name="Verify call" doc:id="3da7d270-0db2-44bb-b0f9-088318a5b382" processor="logger" times="1">
+        <munit-tools:with-attributes >
+          <munit-tools:with-attribute whereValue="Log end time" attributeName="doc:name" />
+        </munit-tools:with-attributes>
+      </munit-tools:verify-call>
+    </munit:validation>
+  </munit:test>
+  <munit:test name="queue-flow-test" doc:id="0cfebf33-d848-48dd-b115-a4c503c79f7f" >
+    <munit:enable-flow-sources >
+      <munit:enable-flow-source value="recursive-queue-caller" />
+      <munit:enable-flow-source value="queue-flow" />
+    </munit:enable-flow-sources>
+    <munit:behavior >
+      <munit-tools:mock-when doc:name="Mock when" doc:id="e1ef2571-d987-4c8c-a17f-e232b2ba97db" processor="flow-ref">
+        <munit-tools:with-attributes >
+          <munit-tools:with-attribute whereValue="recursive-queue-caller" attributeName="doc:name" />
+        </munit-tools:with-attributes>
+      </munit-tools:mock-when>
+    </munit:behavior>
+    <munit:execution >
+      <flow-ref doc:name="queue-flow" doc:id="877087a4-18aa-4b6c-853c-5eb7cb244f5e" name="queue-flow"/>
+    </munit:execution>
+    <munit:validation >
+      <munit-tools:verify-call doc:name="Verify call" doc:id="78ca7e30-b661-4f55-9aaa-98672aacedbb" processor="logger">
+        <munit-tools:with-attributes >
+          <munit-tools:with-attribute whereValue="End of queue" attributeName="doc:name" />
+        </munit-tools:with-attributes>
+      </munit-tools:verify-call>
+    </munit:validation>
+  </munit:test>
+
+
+</mule>

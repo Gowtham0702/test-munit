@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+  <flow name="router-flow" doc:id="ce80e1b7-ea09-4de0-be2b-b600177d6758">
+    <http:listener doc:name="Listener" doc:id="e2480cad-3e42-4ac8-9890-43a5c38d2e61"
+      config-ref="http-listener-config" path="/recursionTest"/>
+    <logger level="INFO" doc:name="Log start time" doc:id="7a5473de-49a7-4fb0-a429-c0cea9e19778"
+      message="Start time: #[now()]"/>
+    <set-variable value="#[0]" doc:name="counter" doc:id="3c41a36b-2a1b-4a0f-803c-f63ff1ec4856"
+      variableName="counter"/>
+    <flow-ref doc:name="recursive-caller" doc:id="b52fafa2-d509-4a36-a278-31c51e70191c" name="recursive-caller"/>
+    <logger level="INFO" doc:name="Log end time" doc:id="7c2d03ed-1856-4fd1-8e86-d17fbef784c2"
+      message="End Time: #[now()]"/>
+  </flow>
+
+  <flow name="recursive-caller" doc:id="9c5f2459-105a-447e-a149-423904f9cc4b">
+    <logger level="INFO" doc:name="Log Recursive counter" doc:id="0e8f597f-2be6-4d5d-b8cc-377aaa49ea36"
+      message="Recursive counter: #[vars.counter as Number] "/>
+    <flow-ref doc:name="common-databaseFlow" doc:id="44fa198d-d73f-4dba-a272-de441bc51bb9"
+      name="common-database-flow"/>
+    <choice doc:name="Make recursive call?" doc:id="f24e16c2-2e86-4b7c-880f-734e06aa09e6">
+      <when expression="#[(vars.counter as Number) &lt; 10]">
+        <set-variable value="#[(vars.counter as Number) + 1]" doc:name="counter"
+          doc:id="6c71c877-318e-4709-81a6-35a3eae562a3" variableName="counter"/>
+        <flow-ref doc:name="recursive-caller" doc:id="f965206b-6caa-450f-9340-946e7be6f7f7"
+          name="recursive-caller"/>
+      </when>
+      <otherwise>
+        <logger level="INFO" doc:name="Completed overall iterations"
+          doc:id="534d774e-a07f-479d-83b7-3b1500af0d4d" message="Completed overall iterations"/>
+      </otherwise>
+    </choice>
+  </flow>
+
+</mule>

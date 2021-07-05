@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+  xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+  xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+
+  <http:listener-config name="http-listener-config" doc:name="HTTP Listener config"
+    doc:id="451ecc53-0a8b-4430-8f6e-3893e5ef7169" basePath="/api/v1">
+    <http:listener-connection host="0.0.0.0" port="9081"/>
+  </http:listener-config>
+
+  <db:config name="database-config" doc:name="Database Config" doc:id="81cef954-1370-406e-8a74-3700f80d6391">
+    <db:my-sql-connection host="localhost" port="3306" user="root" password="*********"
+      database="mulePoc"/>
+  </db:config>
+
+  <vm:config name="vm-config" doc:name="VM Config" doc:id="7aca6484-b025-4b69-80a8-143b2fb843e6"
+    sendCorrelationId="ALWAYS">
+    <vm:queues>
+      <vm:queue queueName="recursion-controller-queue"/>
+    </vm:queues>
+  </vm:config>
+  
+  <configuration-properties doc:name="Configuration properties"
+    doc:id="b53cfec5-9771-45bc-8ced-49134db1ffde" file="properties\recursive-call-poc.properties"/>
+
+</mule>

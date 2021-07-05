@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+  xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+  <flow name="router-os-flow" doc:id="4737deeb-bc9c-42cc-aef8-639c1b96f505">
+    <http:listener doc:name="Listener" doc:id="c8ba676a-c522-4129-bbb4-152de58fcc6e"
+      config-ref="http-listener-config" path="/recursive"/>
+    <logger level="INFO" doc:name="Log start time" doc:id="305aee92-b72c-40ae-986e-050296422dff"
+      message="Start time: #[now()]"/>
+    <set-variable value='#[if (payload == null) "" else payload]' doc:name="originalPayload" doc:id="b6a0edcf-4977-49ae-87a7-809f07649a5e" variableName="originalPayload"/>
+    <vm:publish queueName="recursion-controller-queue" doc:name="Publish to recursive controller queue"
+      doc:id="676b5149-6f29-4968-9ddc-f75ae29001a0" config-ref="vm-config" sendCorrelationId="ALWAYS"
+      correlationId="#[correlationId]">
+      <vm:content ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	counter: 0,
+	inputPayload: vars.originalPayload
+}]]]></vm:content>
+    </vm:publish>
+    <logger level="INFO" doc:name="Log end time" doc:id="49fbca6a-731e-42ee-a32e-0ff5b9719ac7"
+      message="End Time: #[now()]"/>
+  </flow>
+
+</mule>

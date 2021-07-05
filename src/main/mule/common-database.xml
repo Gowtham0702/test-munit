@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+  xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+  <flow name="common-database-flow" doc:id="17cef621-3b26-4ceb-bd32-076bfaf7b07d">
+		<scheduler doc:name="Scheduler" doc:id="fb2766d8-26c0-4af8-803e-b24048b352bb" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="DAYS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value='#[[{"name": "sushma",
+	"age": 28,
+	"location": "hyd"
+},
+{"name": "Suchi",
+	"age": 25,
+	"location": "kol"
+}]]' doc:name="Set Payload" doc:id="c94ffc3a-caf4-40e6-b6f3-802948cbf5eb" />
+		<ee:transform doc:name="Update payload MIME type" doc:id="7a61978a-cf70-4247-83ed-55714e0a0893">
+      <ee:message>
+        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var filteredPayload = (payload filter (value, index) -> value.name matches "sushma")
+---
+ (filteredPayload reduce $ ).location]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <logger level="INFO" doc:name="Log database response payload" doc:id="f3f226d0-9210-43b2-adb0-da3c4ee0de4e"
+      message='DB Response Payload: #[payload]'/>
+  </flow>
+
+</mule>
